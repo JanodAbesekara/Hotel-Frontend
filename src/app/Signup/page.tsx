@@ -1,26 +1,31 @@
+"use client";
 import { useState } from "react";
 import Image from "next/image";
 import axios from "axios";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const data = {
-      email,
-      password,
-    };
-
     try {
-      const response = await axios.post("http://localhost:8000/users/signin", data);
-      const token = response.data.token;
-      localStorage.setItem("token", token);
-      
+      const response = await axios.post("http://localhost:8000/users/signin", {
+        email,
+        password,
+      });
+      router.push("/ProfileImage");
+      const { token } = response.data;
+      localStorage.setItem("HOTEL_FIRST_VILLA", JSON.stringify(token));
+      setEmail("");
+      setPassword("");
     } catch (error) {
-      console.error("There was an error logging in!", error);
+      console.error("Login failed:", (error as any).response?.data);
     }
   };
 
@@ -40,7 +45,6 @@ function Signup() {
               placeholder="Enter User name"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required // Add required to ensure input is not empty
             />
             <h3 className="text-2xl py-6">Password</h3>
             <input
@@ -49,7 +53,6 @@ function Signup() {
               placeholder="Enter Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required // Add required to ensure input is not empty
             />
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full my-6"
@@ -58,6 +61,17 @@ function Signup() {
               Submit
             </button>
           </form>
+          <Link href="/Registation">
+            <button className="bg-purple-800 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full my-6">
+              SignIn
+            </button>
+          </Link>
+
+          <Link href="/Forgetpassword">
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full my-6">
+              Forget Password
+            </button>
+          </Link>
         </div>
       </div>
     </div>
