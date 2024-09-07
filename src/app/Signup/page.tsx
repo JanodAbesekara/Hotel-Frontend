@@ -19,7 +19,7 @@ function Signup() {
         email,
         password,
       });
-      router.push("/ProfileImage");
+      router.push("/Profilepage");
       const { token } = response.data;
       localStorage.setItem("HOTEL_FIRST_VILLA", JSON.stringify(token));
       setEmail("");

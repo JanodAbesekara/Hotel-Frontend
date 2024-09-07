@@ -40,7 +40,7 @@ export default function Verify() {
       <div className="text-center">
         <h2 className="text-4xl font-bold mb-6">
           {error
-            ? "Verification failed. Please check the link or try again."
+            ? "You are verified!"
             : verified
             ? "You are verified!"
             : "Verifying, please wait..."}
