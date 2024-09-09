@@ -43,6 +43,7 @@ function Profilepage() {
     if (!image) return;
 
     setUploading(true);
+
     const imageRef = ref(storage, `images/${image.name}`); // Create a reference for the image
 
     try {
@@ -51,6 +52,7 @@ function Profilepage() {
       setDownloadURL(url);
       setProfileImage(url);
       console.log("Image uploaded to", url);
+      window.alert("Image uploaded successfully");
     } catch (error) {
       console.error("Error uploading image", error);
     } finally {
@@ -78,6 +80,7 @@ function Profilepage() {
       console.log(response);
       window.alert(response.data);
     } catch (error) {
+      window.alert("Error submitting profile data");
       console.log("Error submitting profile data", error);
     }
   };

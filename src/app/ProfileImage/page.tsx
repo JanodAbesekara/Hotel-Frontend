@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import Link from "next/link";
 
 function ProfileImage() {
   const router = useRouter();
@@ -20,6 +21,8 @@ function ProfileImage() {
       profileImage: "",
     },
   });
+
+  const [Role, setRole] = useState("");
 
   const handleLogout = async () => {
     const token = localStorage.getItem("HOTEL_FIRST_VILLA");
@@ -44,7 +47,11 @@ function ProfileImage() {
     const token = localStorage.getItem("HOTEL_FIRST_VILLA");
     const decoded: any = jwtDecode(token as string);
     const ID = decoded.id;
-    console.log(ID);
+
+    const role = decoded.role;
+
+    setRole(role);
+    console.log(role);
 
     const response = axios
       .get("http://localhost:8000/userother/getdetails", {
@@ -75,7 +82,16 @@ function ProfileImage() {
 
       <h2 className="text-center">Details I Filled</h2>
 
-      <div>
+      <div className="justify-center align-middle display-flex">
+        {Data.profile.profileImage && (
+          <a href={Data.profile.profileImage}>
+            <img
+              src={Data.profile.profileImage}
+              alt="Profile"
+              className="w-40 h-40 rounded-full"
+            />
+          </a>
+        )}
         <h3>Firstname: {Data.firstname}</h3>
         <h3>Lastname: {Data.lastname}</h3>
         <h3>Email: {Data.email}</h3>
@@ -83,9 +99,11 @@ function ProfileImage() {
         <h3>Country: {Data.profile.country}</h3>
         <h3>Province: {Data.profile.province}</h3>
         <h3>Address: {Data.profile.address}</h3>
-        {Data.profile.profileImage && (
-          <img src={Data.profile.profileImage} alt="Profile" />
-        )}
+        {Role === "Admin" ? (
+          <Link href="/Hotelpage">
+            <button> Click </button>
+          </Link>
+        ) : null}
       </div>
     </div>
   );
