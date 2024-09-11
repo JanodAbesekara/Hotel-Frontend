@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import Link from "next/link";
 
 function Hotel() {
   const [Hotelname, setHotelname] = useState("");
@@ -15,6 +16,8 @@ function Hotel() {
     const decoded: any = jwtDecode(token as string);
     const ID = decoded.id;
 
+
+    console.log(Hotelname, HotelAddress, HotelLocation, ID);
     try {
       const response = axios.post(
         "http://localhost:8000/userother/addhotelDetails",
@@ -25,6 +28,7 @@ function Hotel() {
           adminId: ID,
         }
       );
+   
       window.alert("Hotel details added successfully");
       window.location.reload();
     } catch (error) {
@@ -68,6 +72,8 @@ function Hotel() {
 
         <button type="submit">Submit</button>
       </form>
+
+      <button><Link href="/AddHotelimages">Clickme</Link></button>
     </div>
   );
 }
