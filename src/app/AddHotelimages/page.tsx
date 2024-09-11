@@ -1,10 +1,10 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // Correct spelling
-import {jwtDecode} from "jwt-decode"; // Correct import
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../app/FirebaseConfig";
+import Imagedisplay from "./Imagedisplay";
 
 function AddHotelImages() {
   const [data, setData] = useState([]);
@@ -12,13 +12,12 @@ function AddHotelImages() {
   const [uploading, setUploading] = useState(false);
   const [downloadURL, setDownloadURL] = useState<null | string>(null);
   const [caption, setCaption] = useState("");
-  const [ hotelId , sethotelId] = useState("");
+  const [GEtdata, setGetData] = useState([]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setImage(file);
-      console.log(file);
     }
   };
 
@@ -26,14 +25,12 @@ function AddHotelImages() {
     if (!image) return;
 
     setUploading(true);
-
-    const imageRef = ref(storage, `HotelImage/${image.name}`); // Create a reference for the image
+    const imageRef = ref(storage, `HotelImage/${image.name}`);
 
     try {
       await uploadBytes(imageRef, image);
       const url = await getDownloadURL(imageRef);
       setDownloadURL(url);
-      console.log("Image uploaded to", url);
       window.alert("Image uploaded successfully");
     } catch (error) {
       console.error("Error uploading image", error);
@@ -50,29 +47,37 @@ function AddHotelImages() {
       return;
     }
 
+    if (!item.id) {
+      window.alert("Please select a hotel first");
+      return;
+    }
 
+    if (!caption) {
+      window.alert("Please enter a caption");
+      return;
+    }
 
     const data = {
       caption: caption,
       url: downloadURL,
       hotelId: item.id,
     };
-    console.log(data);
+
     try {
       const response = await axios.post(
         "http://localhost:8000/userother/AddImagesHotel",
         data
       );
-      console.log(response);
-      window.alert(response.data);
+      window.alert("Uplod Successfully");
+      window.location.reload();
     } catch (error) {
+      console.error("Error submitting profile data", error);
       window.alert("Error submitting profile data");
-      console.log("Error submitting profile data", error);
     }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchHotelData = async () => {
       const token = localStorage.getItem("HOTEL_FIRST_VILLA");
       if (!token) {
         window.alert("No token found");
@@ -86,26 +91,68 @@ function AddHotelImages() {
         const response = await axios.get(
           "http://localhost:8000/userother/gethotelDetails/",
           {
-            params: {
-              id: ID,
-            },
+            params: { id: ID },
           }
         );
         setData(response.data);
       } catch (error) {
+        console.error("Error fetching hotel data", error);
         window.alert("Error fetching data: " + error);
       }
     };
 
-    fetchData();
+    fetchHotelData();
   }, []);
 
+  useEffect(() => {
+    const fetchHotelImages = async (hotel: any) => {
+      if (data?.length > 0) {
+        try {
+          const hotelId = hotel.id;
+          const response = await axios.get(
+            "http://localhost:8000/userother/getHotelImages/",
+            {
+              params: { id: hotelId },
+            }
+          );
+          setGetData((prev: any) => {
+            // console.log("Prev:", prev);
+
+            // Check if an item with the same id already exists
+            const exists = prev.some((item: any) => item.id === hotelId);
+
+            if (!exists) {
+              // If it doesn't exist, add the new item
+              const arr = [...prev, { ...hotel, data: response.data }];
+              // console.log("Arr:", arr);
+              return arr;
+            }
+
+            // If it exists, return the previous state as it is
+            console.log("Item with same id already exists:", hotelId);
+            return prev;
+          });
+        } catch (error) {
+          console.error("Error fetching hotel images", error);
+          window.alert("Error fetching data: " + error);
+        }
+      }
+    };
+
+    console.log("Data:", data);
+
+    data.forEach((hotel: any) => {
+      fetchHotelImages(hotel);
+    });
+
+    // console.log("Get Data:", GEtdata);
+  }, [data]);
   return (
     <div>
       <h3>Add Hotel Images</h3>
 
       <div className="py-10">
-        {data.map((item: any) => (
+        {GEtdata?.map((item: any) => (
           <div key={item.id} className="py-10 px-5">
             <h3>{item.name}</h3>
             <p>
@@ -115,28 +162,20 @@ function AddHotelImages() {
               <strong>Description:</strong> {item.description}
             </p>
 
-            {/* Moved form outside of the description block */}
             <form onSubmit={(e) => handleSubmit(e, item)}>
               <input type="file" onChange={handleFileChange} />
-              <button
-                type="button"
-                onClick={handleUpload}
-                disabled={uploading}
-              >
+              <button type="button" onClick={handleUpload} disabled={uploading}>
                 {uploading ? "Uploading..." : "Upload Image"}
               </button>
 
               <label>Caption</label>
-              <input
-                type="text"
-                value={caption}
-                onChange={(e) => setCaption(e.target.value)}
-              />
+              <input type="text" onChange={(e) => setCaption(e.target.value)} />
 
               <button type="submit" disabled={!downloadURL}>
                 Submit
               </button>
             </form>
+            <Imagedisplay GEtdata={item?.data} />
           </div>
         ))}
       </div>
