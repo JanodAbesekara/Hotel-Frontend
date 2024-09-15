@@ -40,6 +40,9 @@ function Hotel() {
     <div>
       <h2>Add details</h2>
 
+
+      <h3>manage Admin</h3>
+      <Link href="./manageAdmins">Click</Link>
       <form onSubmit={handelSubmit}>
         <label>Hotel Name :- </label>
         <input
