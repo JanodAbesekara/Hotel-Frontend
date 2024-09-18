@@ -15,6 +15,8 @@ interface Admin {
 function Manageadmin() {
   const [data, setData] = useState<Admin[]>([]); // State with Admin type array
 
+  const [email, setEmail] = useState("");
+
   // Fetch admin data
   useEffect(() => {
     const fetchData = async () => {
@@ -30,13 +32,28 @@ function Manageadmin() {
   }, []);
 
   // Function to handle admin deletion
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (email: String) => {
     try {
-      await axios.delete(`http://localhost:8000/users/deleteAdmin/${id}`);
+      await axios.delete(`http://localhost:8000/users/DeleteAdmin?email=${email}`);
       // Update the UI after deleting
-      setData((prevData) => prevData.filter((admin) => admin.id !== id));
+      console.log(email);
+      window.alert("Admin deleted successfully");
     } catch (error) {
       console.error("Error deleting admin:", error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+     await axios.post(
+        `http://localhost:8000/users/CreateAdmin?email=${email}`
+      );
+      window.alert("Admin added successfully");
+      window.location.reload();
+    } catch (error) {
+      console.error("Error adding admin:", error);
     }
   };
 
@@ -45,6 +62,17 @@ function Manageadmin() {
 
 
         <h2 className="text-center">Creat Admin</h2>
+
+        <form className="w-full max-w-lg mx-auto my-8" onSubmit={handleSubmit}>
+          <label>Enter the Email</label>
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full px-3 py-2 mb-4 border rounded-md"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <button type="submit">Submit</button>
+        </form>
         
       <h2 className="text-center py-10">Admin Details</h2>
       <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -72,7 +100,7 @@ function Manageadmin() {
               <td>{admin.PhoneNumber || "N/A"}</td>
               <td>
                 <button
-                  onClick={() => handleDelete(admin.id)}
+                  onClick={() => handleDelete(admin.email)}
                   className="text-red-500 hover:text-red-700"
                 >
                   Delete

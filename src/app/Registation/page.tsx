@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import Axios from "axios";
 
+
+
 function Registation() {
   const [firstname, setfirstname] = useState("");
   const [lastname, setlastname] = useState("");
@@ -46,7 +48,8 @@ function Registation() {
         password: password,
       });
 
-      window.alert((await response).data);
+      window.alert("Registration Successfull");
+      window.location.reload();
     } catch (error) {
       console.log(error);
     }
