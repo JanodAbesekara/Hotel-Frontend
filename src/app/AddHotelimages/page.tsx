@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "../../app/FirebaseConfig";
 import Imagedisplay from "./Imagedisplay";
+import Link from "next/link";
 
 function AddHotelImages() {
   const [data, setData] = useState([]);
@@ -179,6 +180,8 @@ function AddHotelImages() {
           </div>
         ))}
       </div>
+
+      <Link href="/Roomdetailsadd"><button>Click to add Rooms</button></Link>
     </div>
   );
 }

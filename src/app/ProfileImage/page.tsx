@@ -45,31 +45,32 @@ function ProfileImage() {
 
   useEffect(() => {
     const token = localStorage.getItem("HOTEL_FIRST_VILLA");
+
+    if (!token) {
+      return router.replace("/Signup");
+    }
+
     const decoded: any = jwtDecode(token as string);
     const ID = decoded.id;
-
     const role = decoded.role;
 
     setRole(role);
-    console.log(role);
 
-    const response = axios
+    // Fetch user details
+    axios
       .get("http://localhost:8000/userother/getdetails", {
         params: {
           id: ID,
         },
       })
-
       .then((response) => {
         const Data = response.data;
         setData(Data);
-        console.log(Data);
-        console.log(response.data);
       })
       .catch((error) => {
         console.error("Profile fetch failed:", error);
       });
-  }, []);
+  }, [router]);
 
   return (
     <div>
@@ -99,9 +100,14 @@ function ProfileImage() {
         <h3>Country: {Data.profile.country}</h3>
         <h3>Province: {Data.profile.province}</h3>
         <h3>Address: {Data.profile.address}</h3>
+        
         {Role === "Admin" ? (
           <Link href="/Hotelpage">
             <button> Click </button>
+          </Link>
+        ) : Role === "Customer" ? (
+          <Link href="/BookingRoom">
+            <button> ClickRoom </button>
           </Link>
         ) : null}
       </div>
