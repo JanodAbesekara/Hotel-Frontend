@@ -68,11 +68,41 @@ function BookingRoom() {
     try {
       console.log(data);
       await axios.post("http://localhost:8000/hotel/BookingRooms", data);
+      findthebookingid(data.roomId, data.customerId);
       window.alert("Room booked successfully");
       console.log("Room booked successfully", data);
       window.location.reload();
     } catch (error) {
       console.error("Error booking room:", error);
+    }
+  };
+
+  const findthebookingid = async (roomId: number, customerId: number) => {
+    try {
+      const response = await axios.post(
+        `http://localhost:8000/hotel/GetBookingID`,
+        { roomId: roomId, customerId: customerId }
+      );
+      console.log("Booking ID", response.data);
+
+      try {
+        const token = localStorage.getItem("HOTEL_FIRST_VILLA");
+        const decoded: any = jwtDecode(token as string);
+        const Fname = decoded.firstname;
+        const Lname = decoded.lastname;
+        const data = {
+          bookingId: response.data.id,
+          message: `Room Booked By ${Fname}`,
+        };
+        const request = await axios.post(
+          `http://localhost:8000/Notifacition/NotifacitonAdd`,
+          data
+        );
+      } catch (error) {
+        console.error("Error in adding the notifacation", error);
+      }
+    } catch (error) {
+      console.error("Error finding the booking id", error);
     }
   };
 

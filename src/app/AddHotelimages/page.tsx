@@ -181,7 +181,13 @@ function AddHotelImages() {
         ))}
       </div>
 
-      <Link href="/Roomdetailsadd"><button>Click to add Rooms</button></Link>
+      <Link href="/Roomdetailsadd">
+        <button>Click to add Rooms</button>
+      </Link>
+
+      <Link href="/Feedbackmanage">
+        <button>Click to go Feedback</button>
+      </Link>
     </div>
   );
 }
