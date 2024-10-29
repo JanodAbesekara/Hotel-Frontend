@@ -1,45 +1,83 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
+import { io, Socket } from "socket.io-client";
 import axios from "axios";
 
+const SOCKET_URL = "http://localhost:8002";
+
+interface NotificationData {
+  notification: {
+    id: number;
+    message: string;
+    createdAt: string;
+  };
+  customerDetails?: {
+    customerId: number;
+  };
+  roomDetails?: {
+    roomNumber: string;
+    type: string;
+    id: number;
+  };
+  hotelDetails?: {
+    name: string;
+    location: string;
+  };
+}
+
 function Notification() {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<NotificationData[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:8000/Notifacition/getallnotifacition"
-        );
-        console.log(response.data);
-        setData(response.data);
-      } catch (error) {
-        console.error(
-          "Error fetching data:",
-          (error as any).response?.data || (error as any).message
-        );
-      }
-    };
+    const socket: Socket = io(SOCKET_URL);
 
-    fetchData();
+    // Request initial notifications data
+    socket.emit("getAllNotifications");
+
+    // Listen for the list of all notifications
+    socket.on("allNotifications", (notifications: NotificationData[]) => {
+      setData(notifications);
+      console.log(notifications);
+    });
+
+    // Listen for new notifications added
+    socket.on("newNotification", (notification: NotificationData) => {
+      setData((prevData) => [...prevData, notification]);
+    });
+
+    // Listen for notifications deletion updates
+    socket.on("notificationDeleted", (id: number) => {
+      setData((prevData) =>
+        prevData.filter((item) => item.notification.id !== id)
+      );
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = (id: number) => {
+    const socket: Socket = io(SOCKET_URL);
+    socket.emit("deleteNotification", id);
+  };
+
+  const handlechangethestates = async (id: number) => {
     try {
-      const response = await axios.delete(
-        `http://localhost:8000/Notifacition/Deletenotifacition?id=${id}`
+      const request = await axios.post(
+        `http://localhost:8000/hotel/RemoveBooking?roomId=${id}`
       );
-      console.log(response.data);
-      window.alert("Notification deleted successfully");
-      setData(data.filter((item) => item.notification.id !== id));
+      window.alert(request.data.message);
     } catch (error) {
-      console.error("Error deleting notification:", error);
+      console.log(error);
     }
   };
 
   return (
     <div>
-      <h2>Notification</h2>
+      <h2>Notifications</h2>
       <table className="mx-12 p-20">
         <thead>
           <tr>
@@ -56,7 +94,7 @@ function Notification() {
         <tbody>
           {data.map((item) => (
             <tr key={item.notification.id}>
-              <td>{item.notification.id}</td>
+          {/* <td>{item.notification.id}</td> */}
               <td>
                 {item.notification.createdAt
                   ? new Date(item.notification.createdAt)
@@ -68,9 +106,10 @@ function Notification() {
               <td>{item.customerDetails?.customerId || "N/A"}</td>
               <td>
                 {item.roomDetails
-                  ? `${item.roomDetails.roomNumber}, ${item.roomDetails.type}`
+                  ? `${item.roomDetails.roomNumber}, ${item.roomDetails.type} ${item.roomDetails.id}`
                   : "No Room Data"}
               </td>
+
               <td>
                 {item.hotelDetails
                   ? `${item.hotelDetails.name}, ${item.hotelDetails.location}`
@@ -86,8 +125,11 @@ function Notification() {
               </td>
               <td>
                 <button
-                  // onClick={() => handleViewed(item.notification.id)}
                   className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                  onClick={() =>
+                    item.roomDetails?.id !== undefined &&
+                    handlechangethestates(item.roomDetails.id)
+                  }
                 >
                   Viewed
                 </button>
