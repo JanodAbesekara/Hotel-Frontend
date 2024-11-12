@@ -1,12 +1,12 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode"; // Fix import here
 import Link from "next/link";
 import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL = "http://localhost:8002";
-const socket: Socket = io(SOCKET_URL);
+let socket: Socket | null = null;
 
 function BookingRoom() {
   interface Room {
@@ -15,10 +15,10 @@ function BookingRoom() {
     type: string;
     price: number;
     availabilityStatus: boolean;
+    images: Image[]; // Updated to support multiple images per room
   }
 
   interface Image {
-    id: number;
     url: string;
     caption?: string;
   }
@@ -29,7 +29,6 @@ function BookingRoom() {
     location: string;
     description: string;
     rooms: Room[];
-    images: Image[];
   }
 
   const [hotelData, setHotelData] = useState<Hotel[]>([]);
@@ -37,7 +36,7 @@ function BookingRoom() {
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
   const [clicked, setClicked] = useState(false);
-  const [bookingdetalsID, setBookingdetalsID] = useState([]);
+  const [bookingdetalsID, setBookingdetalsID] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchHotelData = async () => {
@@ -53,12 +52,15 @@ function BookingRoom() {
 
     fetchHotelData();
 
-    socket.on("newNotification", (notification: any) => {
-      console.log("New Notification", notification);
-    });
+    if (!socket) {
+      socket = io(SOCKET_URL);
+      socket.on("newNotification", (notification: any) => {
+        console.log("New Notification", notification);
+      });
+    }
 
     return () => {
-      socket.off("newNotification");
+      socket?.off("newNotification");
     };
   }, []);
 
@@ -113,7 +115,7 @@ function BookingRoom() {
 
       const data = { bookingId, message };
 
-      socket.emit("addNotification", data);
+      socket?.emit("addNotification", data);
 
       return response.data.id;
     } catch (error) {
@@ -146,16 +148,15 @@ function BookingRoom() {
       };
 
       console.log("Cancel Details:", details);
-      socket.emit("canceledBooking", details);
+      socket?.emit("canceledBooking", details);
 
-       window.location.reload();
+      window.location.reload();
     } catch (error) {
       console.error("Error canceling room booking:", error);
     }
   };
 
   return (
-    
     <div>
       <div className="float-right p-10">
         <Link href="/CutomerNotifacition">
@@ -183,6 +184,7 @@ function BookingRoom() {
                 <th>Images</th>
                 <th>Book Room</th>
                 <th>Cancel Room</th>
+             
               </tr>
             </thead>
             <tbody>
@@ -195,17 +197,17 @@ function BookingRoom() {
                     {room.availabilityStatus ? "Available" : "Not Available"}
                   </td>
                   <td>
-                    {hotel.images.length > 0 ? (
-                      hotel.images.map((image) => (
+                    {room.images.length > 0 ? (
+                      room.images.map((image, index) => (
                         <a
                           href={image.url}
                           target="_blank"
                           rel="noreferrer"
-                          key={image.id}
+                          key={index}
                         >
                           <img
                             src={image.url}
-                            alt={image.caption || "Hotel Image"}
+                            alt={image.caption || "Room Image"}
                             className="w-20 h-20"
                           />
                           {image.caption}
@@ -245,6 +247,7 @@ function BookingRoom() {
                       Cancel Room
                     </button>
                   </td>
+                 
                 </tr>
               ))}
             </tbody>
